@@ -1,0 +1,134 @@
+package wpshyaka.wordpress.sweep;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Process;
+import android.util.Log;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import java.util.Calendar;
+import java.util.Date;
+
+public class MainActivity extends AppCompatActivity {
+
+    private ImageView img;
+    protected static final String TAG = MainActivity.class.getName();
+
+    Handler mHandler;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        Thread myThread = null;
+        Runnable runnable = new CountDownRunner();
+        myThread = new Thread(runnable);
+        myThread.start();
+    }
+
+//=================================================================
+    private void doPlay(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                Log.v("log_tag", "this is seocond thread");
+            }
+        }).start();
+    }
+//=====================================================================
+
+public void doRotate() {
+
+    runOnUiThread(new Runnable() {
+        public void run() {
+            try {
+                Calendar c= Calendar.getInstance();
+                int duration= 1000;
+                float x = (float) 10;
+                float y =(float) 10;
+                int seconds=c.get(Calendar.SECOND);
+
+                img = (ImageView) findViewById(R.id.imgsecond);
+                RotateAnimation rotateAnimation = new RotateAnimation(
+                        (seconds-1)*x,
+                        (seconds)*y,
+                        Animation.RELATIVE_TO_SELF, 0.5f,
+                        Animation.RELATIVE_TO_SELF, 0.5f);
+
+                rotateAnimation.setInterpolator(new LinearInterpolator());
+                rotateAnimation.setDuration(duration);
+                rotateAnimation.setFillAfter(true);
+                rotateAnimation.setRepeatCount(Animation.INFINITE);
+                img.startAnimation(rotateAnimation);
+
+            } catch (Exception e) {
+                Log.e("log_tag", "Error msg is " + e.toString());
+            }
+        }
+    });
+}
+//=====================================================================
+
+    class CountDownRunner implements Runnable {
+        // @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    // Log.v("log_tag", "Roate is going");
+                    doRotate();
+                    Thread.sleep(1000);
+                    doPlay();
+                } catch (InterruptedException e)
+                {
+                    // Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    Log.e("log_tag", "Error is " + e.toString());
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Process.killProcess(Process.myPid());
+    }
+}
+//=====================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:context=".MainActivity"
+    android:gravity="center"
+    android:layout_gravity="center">
+
+    <AnalogClock
+        android:id="@+id/AnalogClock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:dial="@drawable/dial2"
+        android:hand_minute="@drawable/clock_minute_hand"
+        android:hand_hour="@drawable/clock_hour_hand"
+        android:layout_centerInParent="true">
+    </AnalogClock>
+
+    <ImageView
+        android:src="@drawable/second_hand"
+        android:id="@+id/imgsecond"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true" />
+
+</RelativeLayout>
